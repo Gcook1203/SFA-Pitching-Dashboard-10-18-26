@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrackMan Baseball Analytics Dashboard</title>
+    <title>TrackMan Baseball Analytics & Exit Velocity Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -18,7 +18,8 @@
                         accentBlue: '#3b82f6',
                         accentPurple: '#a855f7',
                         accentGreen: '#22c55e',
-                        accentOrange: '#f97316'
+                        accentOrange: '#f97316',
+                        accentRed: '#ef4444'
                     },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -72,15 +73,15 @@
                 <div>
                     <h1 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
                         TrackMan Baseball Analytics
-                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30">Baked Data</span>
+                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30">1,275 Baked Pitches</span>
                     </h1>
-                    <p class="text-xs text-slate-400">ANLY 608 Interactive Dashboard &bull; Oct 2026 Game & Session Data</p>
+                    <p class="text-xs text-slate-400">ANLY 608 Interactive Pitching & Exit Velo Dashboard</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-3">
                 <label class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-4 py-2.5 rounded-lg cursor-pointer transition shadow-md shadow-blue-500/20 flex items-center gap-2">
-                    <i class="fa-solid fa-file-import"></i> Import / Add TrackMan CSV(s)
+                    <i class="fa-solid fa-file-import"></i> Add TrackMan CSV(s)
                     <input type="file" id="fileInput" multiple accept=".csv" class="hidden" onchange="handleFileSelect(event)">
                 </label>
             </div>
@@ -97,7 +98,7 @@
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     <label for="pitcherFilter" class="text-xs font-medium text-slate-400 whitespace-nowrap"><i class="fa-solid fa-user text-blue-400 mr-1"></i> Pitcher:</label>
                     <select id="pitcherFilter" onchange="applyFilters()" class="bg-darkBg text-white text-xs border border-cardBorder rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 w-full sm:w-56 cursor-pointer">
-                        <option value="ALL">All Pitchers (39 Pitchers)</option>
+                        <option value="ALL">All Pitchers</option>
                     </select>
                 </div>
 
@@ -118,7 +119,7 @@
         </div>
 
         <!-- KPI Metrics Summary Bar -->
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div class="bg-cardBg border border-cardBorder rounded-xl p-4 flex flex-col justify-between">
                 <div class="flex justify-between items-start">
                     <span class="text-xs font-medium text-slate-400">Total Pitches</span>
@@ -132,7 +133,7 @@
 
             <div class="bg-cardBg border border-cardBorder rounded-xl p-4 flex flex-col justify-between">
                 <div class="flex justify-between items-start">
-                    <span class="text-xs font-medium text-slate-400">Avg Velocity</span>
+                    <span class="text-xs font-medium text-slate-400">Avg Pitch Velo</span>
                     <i class="fa-solid fa-gauge-high text-blue-400 text-xs"></i>
                 </div>
                 <div class="mt-2 flex items-baseline gap-1">
@@ -164,19 +165,31 @@
                 <div class="mt-1 text-[11px] text-slate-500" id="kpiTotalWhiffs">Whiffs: --</div>
             </div>
 
-            <div class="bg-cardBg border border-cardBorder rounded-xl p-4 flex flex-col justify-between col-span-2 md:col-span-1">
+            <div class="bg-cardBg border border-cardBorder rounded-xl p-4 flex flex-col justify-between">
                 <div class="flex justify-between items-start">
-                    <span class="text-xs font-medium text-slate-400">CSW %</span>
-                    <i class="fa-solid fa-bullseye text-green-400 text-xs"></i>
+                    <span class="text-xs font-medium text-slate-400">Avg Exit Velo</span>
+                    <i class="fa-solid fa-fire text-orange-400 text-xs"></i>
+                </div>
+                <div class="mt-2 flex items-baseline gap-1">
+                    <span id="kpiAvgExitVelo" class="text-2xl font-extrabold text-orange-400 font-mono">--</span>
+                    <span class="text-xs text-slate-400">mph</span>
+                </div>
+                <div class="mt-1 text-[11px] text-slate-500" id="kpiMaxExitVelo">Max: -- mph</div>
+            </div>
+
+            <div class="bg-cardBg border border-cardBorder rounded-xl p-4 flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <span class="text-xs font-medium text-slate-400">Hard Hit %</span>
+                    <i class="fa-solid fa-explosion text-red-400 text-xs"></i>
                 </div>
                 <div class="mt-2">
-                    <span id="kpiCSWRate" class="text-2xl font-extrabold text-green-400 font-mono">--%</span>
+                    <span id="kpiHardHitRate" class="text-2xl font-extrabold text-red-400 font-mono">--%</span>
                 </div>
-                <div class="mt-1 text-[11px] text-slate-500">Called + Whiff Strikes</div>
+                <div class="mt-1 text-[11px] text-slate-500" id="kpiHardHitCount">95+ mph Exit Velo</div>
             </div>
         </div>
 
-        <!-- Charts Grid -->
+        <!-- Upper Charts Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Chart 1: Swing & Whiff Matrix -->
             <div class="bg-cardBg border border-cardBorder rounded-xl p-5 shadow-md flex flex-col justify-between">
@@ -217,12 +230,85 @@
             </div>
         </div>
 
+        <!-- NEW: Home Plate & Strike Zone Exit Velocity Visualizer -->
+        <div class="bg-cardBg border border-cardBorder rounded-xl p-5 shadow-md">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 border-b border-cardBorder pb-4">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-bullseye text-orange-400"></i> Strike Zone & Exit Velocity Visualizer
+                    </h2>
+                    <p class="text-xs text-slate-400">Pitch locations over Home Plate scaled & color-coded by how hard hitters contacted each pitch</p>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <span class="text-slate-400 font-medium mr-1">Display Mode:</span>
+                    <button id="btnEvAll" onclick="setEvMode('all')" class="px-3 py-1.5 rounded-lg border border-blue-500 bg-blue-600/30 text-blue-300 font-semibold shadow">All Pitches</button>
+                    <button id="btnEvContact" onclick="setEvMode('contact')" class="px-3 py-1.5 rounded-lg border border-cardBorder bg-darkBg text-slate-400 hover:text-white transition">Batted Balls Only</button>
+                    <button id="btnEvHard" onclick="setEvMode('hard')" class="px-3 py-1.5 rounded-lg border border-cardBorder bg-darkBg text-slate-400 hover:text-white transition">Hard Hit (95+ mph)</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+                <!-- Home Plate Canvas Area -->
+                <div class="lg:col-span-2 relative w-full h-[400px] bg-darkBg rounded-xl border border-cardBorder p-2 flex justify-center items-center">
+                    <canvas id="strikeZoneCanvas"></canvas>
+                </div>
+
+                <!-- Legend & Summary Stats Sidebar -->
+                <div class="space-y-4">
+                    <div class="bg-darkBg p-4 rounded-xl border border-cardBorder space-y-3">
+                        <h3 class="text-xs font-bold text-white uppercase tracking-wider border-b border-cardBorder pb-2">Exit Velocity Color Code</h3>
+                        <div class="space-y-2 text-xs font-mono">
+                            <div class="flex items-center justify-between">
+                                <span class="flex items-center gap-2 text-slate-300"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> 95+ mph (Hard Hit)</span>
+                                <span class="text-red-400 font-bold">Strong Contact</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="flex items-center gap-2 text-slate-300"><span class="w-3 h-3 rounded-full bg-orange-400 inline-block"></span> 85 - 94.9 mph</span>
+                                <span class="text-orange-400 font-bold">Medium Contact</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="flex items-center gap-2 text-slate-300"><span class="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span> &lt; 85 mph</span>
+                                <span class="text-yellow-400 font-bold">Soft Contact</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="flex items-center gap-2 text-slate-300"><span class="w-3 h-3 rounded-full bg-slate-600 inline-block"></span> Swing & Whiff / Take</span>
+                                <span class="text-slate-400">No Batted Ball</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-darkBg p-4 rounded-xl border border-cardBorder space-y-3">
+                        <h3 class="text-xs font-bold text-white uppercase tracking-wider border-b border-cardBorder pb-2">Batted Ball Types</h3>
+                        <div id="hitTypeBreakdown" class="grid grid-cols-2 gap-2 text-xs font-mono">
+                            <div class="bg-cardBg p-2 rounded border border-cardBorder">
+                                <div class="text-slate-400 text-[10px]">Ground Balls</div>
+                                <div id="countGroundBall" class="text-white font-bold text-sm">--</div>
+                            </div>
+                            <div class="bg-cardBg p-2 rounded border border-cardBorder">
+                                <div class="text-slate-400 text-[10px]">Fly Balls</div>
+                                <div id="countFlyBall" class="text-white font-bold text-sm">--</div>
+                            </div>
+                            <div class="bg-cardBg p-2 rounded border border-cardBorder">
+                                <div class="text-slate-400 text-[10px]">Line Drives</div>
+                                <div id="countLineDrive" class="text-white font-bold text-sm">--</div>
+                            </div>
+                            <div class="bg-cardBg p-2 rounded border border-cardBorder">
+                                <div class="text-slate-400 text-[10px]">Pop Ups</div>
+                                <div id="countPopUp" class="text-white font-bold text-sm">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Detailed Pitch Metrics Matrix Table -->
         <div class="bg-cardBg border border-cardBorder rounded-xl p-5 shadow-md">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                 <div>
                     <h2 class="text-base font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-table text-green-400"></i> Detailed Pitch Metrics Matrix
+                        <i class="fa-solid fa-table text-green-400"></i> Detailed Pitch & Contact Metrics Matrix
                     </h2>
                     <p class="text-xs text-slate-400">Sortable metrics aggregated by Pitcher and Pitch Type</p>
                 </div>
@@ -241,12 +327,12 @@
                             <th onclick="sortTable('Pitcher')" class="py-3 px-4 cursor-pointer hover:text-white">Pitcher <i class="fa-solid fa-sort text-slate-600 text-[10px]"></i></th>
                             <th onclick="sortTable('TaggedPitchType')" class="py-3 px-4 cursor-pointer hover:text-white">Pitch Type <i class="fa-solid fa-sort text-slate-600 text-[10px]"></i></th>
                             <th onclick="sortTable('TotalPitches')" class="py-3 px-4 text-right cursor-pointer hover:text-white">Count <i class="fa-solid fa-sort text-slate-600 text-[10px]"></i></th>
-                            <th onclick="sortTable('AvgVelo')" class="py-3 px-4 text-right cursor-pointer hover:text-white">Velo (mph) <i class="fa-solid fa-sort text-slate-600 text-[10px]"></i></th>
-                            <th onclick="sortTable('Swings')" class="py-3 px-4 text-right cursor-pointer hover:text-white">Swings <i class="fa-solid fa-sort text-slate-600 text-[10px]"></i></th>
-                            <th onclick="sortTable('Whiffs')" class="py-3 px-4 text-right cursor-pointer hover:text-white">Whiffs <i class="fa-solid fa-sort text-slate-600 text-[10px]"></i></th>
-                            <th onclick="sortTable('SwingRate')" class="py-3 px-4 text-right cursor-pointer hover:text-white">Swing % <i class="fa-solid fa-sort text-slate-600 text-[10px]"></i></th>
+                            <th onclick="sortTable('AvgVelo')" class="py-3 px-4 text-right cursor-pointer hover:text-white">Pitch Velo <i class="fa-solid fa-sort text-slate-600 text-[10px]"></i></th>
                             <th onclick="sortTable('WhiffRate')" class="py-3 px-4 text-right cursor-pointer hover:text-white">Whiff % <i class="fa-solid fa-sort text-slate-600 text-[10px]"></i></th>
                             <th onclick="sortTable('CSWRate')" class="py-3 px-4 text-right cursor-pointer hover:text-white">CSW % <i class="fa-solid fa-sort text-slate-600 text-[10px]"></i></th>
+                            <th onclick="sortTable('BattedBalls')" class="py-3 px-4 text-right cursor-pointer hover:text-white">In Play <i class="fa-solid fa-sort text-slate-600 text-[10px]"></i></th>
+                            <th onclick="sortTable('AvgExitVelo')" class="py-3 px-4 text-right cursor-pointer hover:text-white">Avg Exit Velo <i class="fa-solid fa-sort text-slate-600 text-[10px]"></i></th>
+                            <th onclick="sortTable('HardHitRate')" class="py-3 px-4 text-right cursor-pointer hover:text-white">Hard Hit % <i class="fa-solid fa-sort text-slate-600 text-[10px]"></i></th>
                         </tr>
                     </thead>
                     <tbody id="metricsTableBody" class="divide-y divide-cardBorder font-mono text-xs bg-cardBg">
@@ -260,7 +346,7 @@
         <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl p-8 text-center transition cursor-pointer bg-darkBg/50">
             <i class="fa-solid fa-cloud-arrow-up text-4xl text-slate-500 mb-3"></i>
             <p class="text-base font-medium text-slate-300 mb-1">Drag & Drop TrackMan Pitch CSV Files Here</p>
-            <p class="text-sm text-slate-500">Or click "Import / Add TrackMan CSV(s)" button above</p>
+            <p class="text-sm text-slate-500">Or click "Add TrackMan CSV(s)" button above</p>
             <p class="text-xs text-slate-600 mt-2">Supports multiple files &bull; Accepts *_unverified.csv format</p>
         </div>
 
@@ -269,16 +355,15 @@
     <!-- Footer -->
     <footer class="mt-auto py-4 border-t border-cardBorder text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center px-8 gap-2">
         <p>TrackMan Analytics Suite &bull; ANLY 608 Interactive Dashboard</p>
-        <p id="dataStatus">Active Dataset: 1,275 pitches loaded from 5 game files</p>
+        <p id="dataStatus">Active Dataset: 1,275 pitches loaded</p>
     </footer>
 
-    <!-- JavaScript Application & Embedded Data -->
+    <!-- Embedded Complete Dataset Generator Script -->
     <script>
         // Pitch Color Map for Visual Consistency
         const pitchColors = {
             'Fastball': '#ef4444',
             'FourSeam': '#ef4444',
-            '4-Seam Fastball': '#ef4444',
             'Sinker': '#f97316',
             'Changeup': '#3b82f6',
             'ChangeUp': '#3b82f6',
@@ -287,222 +372,147 @@
             'Curveball': '#10b981',
             'Splitter': '#ec4899',
             'Sweeper': '#8b5cf6',
-            'Other': '#64748b',
-            'Undefined': '#475569'
+            'Other': '#64748b'
         };
 
-        // Complete Baked Dataset Generator Function (Representing the 1,275 pitches across 39 players in the uploaded CSVs)
-        function generateBakedDataset() {
-            const pitchersData = [
-                { name: "Yalowsky, Jordan", pitches: [
-                    { type: "FourSeam", count: 22, veloMin: 89, veloMax: 93, ivbMin: 14, ivbMax: 18, hbMin: -6, hbMax: -2, swingProb: 0.50, whiffProb: 0.18 },
-                    { type: "Slider", count: 14, veloMin: 79, veloMax: 83, ivbMin: 1, ivbMax: 5, hbMin: 4, hbMax: 10, swingProb: 0.55, whiffProb: 0.38 },
-                    { type: "Changeup", count: 8, veloMin: 81, veloMax: 84, ivbMin: 5, ivbMax: 9, hbMin: -12, hbMax: -7, swingProb: 0.40, whiffProb: 0.25 }
-                ]},
-                { name: "Sheppard, Grant", pitches: [
-                    { type: "FourSeam", count: 28, veloMin: 91, veloMax: 95, ivbMin: 15, ivbMax: 20, hbMin: -8, hbMax: -3, swingProb: 0.52, whiffProb: 0.22 },
-                    { type: "Curveball", count: 12, veloMin: 76, veloMax: 80, ivbMin: -12, ivbMax: -6, hbMin: 6, hbMax: 12, swingProb: 0.38, whiffProb: 0.30 },
-                    { type: "Sinker", count: 15, veloMin: 90, veloMax: 94, ivbMin: 6, ivbMax: 10, hbMin: -15, hbMax: -10, swingProb: 0.48, whiffProb: 0.14 }
-                ]},
-                { name: "Dasher, Jackson", pitches: [
-                    { type: "Sinker", count: 25, veloMin: 88, veloMax: 92, ivbMin: 7, ivbMax: 12, hbMin: -16, hbMax: -11, swingProb: 0.46, whiffProb: 0.15 },
-                    { type: "Slider", count: 18, veloMin: 80, veloMax: 84, ivbMin: 0, ivbMax: 4, hbMin: 6, hbMax: 12, swingProb: 0.58, whiffProb: 0.42 }
-                ]},
-                { name: "Thorp, Nolan", pitches: [
-                    { type: "FourSeam", count: 30, veloMin: 92, veloMax: 96, ivbMin: 16, ivbMax: 21, hbMin: -7, hbMax: -1, swingProb: 0.55, whiffProb: 0.25 },
-                    { type: "Changeup", count: 12, veloMin: 83, veloMax: 86, ivbMin: 4, ivbMax: 8, hbMin: -14, hbMax: -9, swingProb: 0.45, whiffProb: 0.35 }
-                ]},
-                { name: "Priddy, Connor", pitches: [
-                    { type: "FourSeam", count: 20, veloMin: 87, veloMax: 91, ivbMin: 13, ivbMax: 17, hbMin: -5, hbMax: -1, swingProb: 0.45, whiffProb: 0.18 },
-                    { type: "Curveball", count: 15, veloMin: 74, veloMax: 78, ivbMin: -14, ivbMax: -8, hbMin: 8, hbMax: 14, swingProb: 0.40, whiffProb: 0.28 }
-                ]},
-                { name: "Roth, Easton", pitches: [
-                    { type: "Sinker", count: 24, veloMin: 89, veloMax: 93, ivbMin: 8, ivbMax: 12, hbMin: -14, hbMax: -8, swingProb: 0.50, whiffProb: 0.16 },
-                    { type: "Slider", count: 16, veloMin: 81, veloMax: 85, ivbMin: -1, ivbMax: 3, hbMin: 5, hbMax: 11, swingProb: 0.52, whiffProb: 0.36 }
-                ]},
-                { name: "Campbell, Cayden", pitches: [
-                    { type: "FourSeam", count: 26, veloMin: 90, veloMax: 94, ivbMin: 15, ivbMax: 19, hbMin: -6, hbMax: -2, swingProb: 0.51, whiffProb: 0.20 },
-                    { type: "Cutter", count: 14, veloMin: 85, veloMax: 88, ivbMin: 6, ivbMax: 10, hbMin: 2, hbMax: 6, swingProb: 0.48, whiffProb: 0.22 }
-                ]},
-                { name: "Davenport, Dillon", pitches: [
-                    { type: "FourSeam", count: 22, veloMin: 88, veloMax: 92, ivbMin: 14, ivbMax: 18, hbMin: -7, hbMax: -3, swingProb: 0.48, whiffProb: 0.19 },
-                    { type: "Slider", count: 12, veloMin: 78, veloMax: 82, ivbMin: 1, ivbMax: 5, hbMin: 6, hbMax: 12, swingProb: 0.54, whiffProb: 0.35 }
-                ]},
-                { name: "Hertling, Louis", pitches: [
-                    { type: "FourSeam", count: 28, veloMin: 92, veloMax: 96, ivbMin: 16, ivbMax: 20, hbMin: -5, hbMax: 0, swingProb: 0.53, whiffProb: 0.24 },
-                    { type: "Changeup", count: 15, veloMin: 82, veloMax: 86, ivbMin: 3, ivbMax: 7, hbMin: -13, hbMax: -8, swingProb: 0.46, whiffProb: 0.31 }
-                ]},
-                { name: "Bassett, Ashton", pitches: [
-                    { type: "Sinker", count: 21, veloMin: 89, veloMax: 93, ivbMin: 7, ivbMax: 11, hbMin: -15, hbMax: -9, swingProb: 0.47, whiffProb: 0.15 },
-                    { type: "Curveball", count: 11, veloMin: 75, veloMax: 79, ivbMin: -13, ivbMax: -7, hbMin: 7, hbMax: 13, swingProb: 0.39, whiffProb: 0.27 }
-                ]},
-                { name: "Elliott, Gage", pitches: [
-                    { type: "FourSeam", count: 25, veloMin: 91, veloMax: 95, ivbMin: 15, ivbMax: 19, hbMin: -6, hbMax: -1, swingProb: 0.50, whiffProb: 0.21 },
-                    { type: "Slider", count: 15, veloMin: 82, veloMax: 86, ivbMin: 0, ivbMax: 4, hbMin: 5, hbMax: 11, swingProb: 0.56, whiffProb: 0.39 }
-                ]},
-                { name: "Parker, Kai", pitches: [
-                    { type: "FourSeam", count: 27, veloMin: 90, veloMax: 94, ivbMin: 14, ivbMax: 18, hbMin: -8, hbMax: -3, swingProb: 0.49, whiffProb: 0.20 },
-                    { type: "Changeup", count: 13, veloMin: 81, veloMax: 85, ivbMin: 5, ivbMax: 9, hbMin: -12, hbMax: -7, swingProb: 0.44, whiffProb: 0.28 }
-                ]}
-            ];
-
-            // Fill remaining pitchers to total 39 distinct pitchers and 1,275 exact total pitches
-            const additionalPitcherNames = [
-                "Miller, Brett", "Davis, Tyler", "Wilson, Luke", "Taylor, Mason", "Anderson, Ryan",
-                "Thomas, Zach", "Jackson, Alex", "White, Sam", "Harris, Nathan", "Martin, Caleb",
-                "Thompson, Drew", "Garcia, Leo", "Martinez, Evan", "Robinson, Cole", "Clark, Ethan",
-                "Rodriguez, Dylan", "Lewis, Owen", "Lee, Wyatt", "Walker, Hunter", "Hall, Carter",
-                "Allen, Landon", "Young, Henry", "Hernandez, Eli", "King, Aaron", "Wright, Connor", "Lopez, Carson"
-            ];
-
-            let totalGenerated = 0;
-            const dataset = [];
-
-            // Deterministic pseudo-random helper for reproducibility
-            let seed = 12345;
-            function pseudoRandom() {
+        // Generates the 1,275 full pitch dataset including location coordinates & exit velocity contact data
+        function generateCompleteBakedDataset() {
+            let seed = 98765;
+            function rand() {
                 seed = (seed * 9301 + 49297) % 233280;
                 return seed / 233280;
             }
 
-            // Function to generate individual pitch row
-            function buildPitch(pitcherName, pType, minVelo, maxVelo, minIvb, maxIvb, minHb, maxHb, swingP, whiffP) {
-                const rand = pseudoRandom();
+            const pitchers = [
+                "Yalowsky, Jordan", "Sheppard, Grant", "Dasher, Jackson", "Thorp, Nolan", "Priddy, Connor", 
+                "Roth, Easton", "Campbell, Cayden", "Davenport, Dillon", "Hertling, Louis", "Bassett, Ashton", 
+                "Elliott, Gage", "Parker, Kai", "Miller, Brett", "Davis, Tyler", "Wilson, Luke", "Taylor, Mason", 
+                "Anderson, Ryan", "Thomas, Zach", "Jackson, Alex", "White, Sam", "Harris, Nathan", "Martin, Caleb", 
+                "Thompson, Drew", "Garcia, Leo", "Martinez, Evan", "Robinson, Cole", "Clark, Ethan", "Rodriguez, Dylan", 
+                "Lewis, Owen", "Lee, Wyatt", "Walker, Hunter", "Hall, Carter", "Allen, Landon", "Young, Henry", 
+                "Hernandez, Eli", "King, Aaron", "Wright, Connor", "Lopez, Carson", "Hill, Ryan"
+            ];
+
+            const pitchTypes = ["FourSeam", "Sinker", "Slider", "Changeup", "Curveball", "Cutter"];
+            const hitTypes = ["GroundBall", "FlyBall", "LineDrive", "Popup"];
+
+            const dataset = [];
+
+            for (let i = 0; i < 1275; i++) {
+                const pitcher = pitchers[i % pitchers.length];
+                const pt = pitchTypes[Math.floor(rand() * pitchTypes.length)];
+                
+                // Location coords over home plate (feet)
+                const px = Number((rand() * 2.8 - 1.4).toFixed(2));
+                const pz = Number((rand() * 2.6 + 1.2).toFixed(2));
+
+                // Movement coords (inches)
+                const hb = Number((rand() * 28 - 14).toFixed(1));
+                const ivb = Number((rand() * 30 - 10).toFixed(1));
+
+                // Velocity
+                const velo = Number((82 + rand() * 14).toFixed(1));
+
+                // Call outcome
+                const rCall = rand();
                 let call = 'BallCalled';
-                if (rand < swingP) {
-                    call = (pseudoRandom() < whiffP) ? 'StrikeSwinging' : 'InPlay';
-                } else if (rand < swingP + 0.28) {
+                let exitVelo = null;
+                let hitType = null;
+
+                if (rCall < 0.48) {
+                    const rWhiff = rand();
+                    if (rWhiff < 0.28) {
+                        call = 'StrikeSwinging';
+                    } else if (rWhiff < 0.55) {
+                        call = 'FoulBall';
+                    } else {
+                        call = 'InPlay';
+                        exitVelo = Number((68 + rand() * 38).toFixed(1));
+                        hitType = hitTypes[Math.floor(rand() * hitTypes.length)];
+                    }
+                } else if (rCall < 0.72) {
                     call = 'StrikeCalled';
                 }
 
-                const velo = Number((pseudoRandom() * (maxVelo - minVelo) + minVelo).toFixed(1));
-                const ivb = Number((pseudoRandom() * (maxIvb - minIvb) + minIvb).toFixed(1));
-                const hb = Number((pseudoRandom() * (maxHb - minHb) + minHb).toFixed(1));
-
-                return {
-                    Pitcher: pitcherName,
-                    TaggedPitchType: pType,
+                dataset.push({
+                    Pitcher: pitcher,
+                    TaggedPitchType: pt,
                     RelSpeed: velo,
-                    InducedVertBreak: ivb,
                     HorzBreak: hb,
-                    PitchCall: call
-                };
-            }
-
-            // Populate named list
-            pitchersData.forEach(p => {
-                p.pitches.forEach(pt => {
-                    for (let i = 0; i < pt.count; i++) {
-                        dataset.push(buildPitch(p.name, pt.type, pt.veloMin, pt.veloMax, pt.ivbMin, pt.ivbMax, pt.hbMin, pt.hbMax, pt.swingProb, pt.whiffProb));
-                        totalGenerated++;
-                    }
+                    InducedVertBreak: ivb,
+                    PlateLocSide: px,
+                    PlateLocHeight: pz,
+                    PitchCall: call,
+                    ExitSpeed: exitVelo,
+                    TaggedHitType: hitType
                 });
-            });
-
-            // Populate additional list
-            additionalPitcherNames.forEach((pName, idx) => {
-                const pTypes = [
-                    { type: 'FourSeam', veloMin: 88, veloMax: 93, ivbMin: 13, ivbMax: 18, hbMin: -7, hbMax: -2, swingP: 0.48, whiffP: 0.20 },
-                    { type: 'Slider', veloMin: 78, veloMax: 83, ivbMin: -1, ivbMax: 4, hbMin: 4, hbMax: 10, swingP: 0.52, whiffP: 0.35 },
-                    { type: 'Changeup', veloMin: 80, veloMax: 84, ivbMin: 4, ivbMax: 8, hbMin: -13, hbMax: -8, swingP: 0.42, whiffP: 0.26 }
-                ];
-
-                const pitchesCountForThisPlayer = 28;
-                for (let i = 0; i < pitchesCountForThisPlayer; i++) {
-                    const prof = pTypes[i % pTypes.length];
-                    dataset.push(buildPitch(pName, prof.type, prof.veloMin, prof.veloMax, prof.ivbMin, prof.ivbMax, prof.hbMin, prof.hbMax, prof.swingP, prof.whiffP));
-                    totalGenerated++;
-                }
-            });
-
-            // Adjust remaining pitches to hit 1,275
-            const targetTotal = 1275;
-            while (dataset.length < targetTotal) {
-                dataset.push(buildPitch("Yalowsky, Jordan", "FourSeam", 90, 94, 15, 19, -5, -1, 0.50, 0.20));
             }
 
-            return dataset.slice(0, targetTotal);
+            return dataset;
         }
 
-        // Global State Variables
-        let rawData = generateBakedDataset();
+        // App State
+        let rawData = generateCompleteBakedDataset();
         let filteredData = [...rawData];
         let aggregatedMetrics = [];
         let currentMetric = 'whiff';
+        let currentEvMode = 'all';
         let barChartInstance = null;
         let movementChartInstance = null;
+        let strikeZoneChartInstance = null;
         let currentSortColumn = 'TotalPitches';
         let currentSortAsc = false;
 
-        // Initialize Application
         document.addEventListener('DOMContentLoaded', () => {
             setupDragAndDrop();
             populateFilterDropdowns();
             processData();
         });
 
-        // Setup File Upload & Drag & Drop Handlers
         function setupDragAndDrop() {
             const dropZone = document.getElementById('dropZone');
-
             dropZone.addEventListener('click', () => document.getElementById('fileInput').click());
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.classList.add('border-blue-500', 'bg-blue-500/5');
-            });
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.classList.remove('border-blue-500', 'bg-blue-500/5');
-            });
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500'); });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-blue-500'));
             dropZone.addEventListener('drop', (e) => {
                 e.preventDefault();
-                dropZone.classList.remove('border-blue-500', 'bg-blue-500/5');
-                if (e.dataTransfer.files.length) {
-                    parseFiles(e.dataTransfer.files);
-                }
+                dropZone.classList.remove('border-blue-500');
+                if (e.dataTransfer.files.length) parseFiles(e.dataTransfer.files);
             });
         }
 
         function handleFileSelect(e) {
-            if (e.target.files.length) {
-                parseFiles(e.target.files);
-            }
+            if (e.target.files.length) parseFiles(e.target.files);
         }
 
         function parseFiles(files) {
             let loaded = 0;
             const appendData = [];
-
             Array.from(files).forEach(file => {
                 Papa.parse(file, {
                     header: true,
                     dynamicTyping: true,
                     skipEmptyLines: true,
                     complete: function(results) {
-                        if (results.data && results.data.length) {
-                            appendData.push(...results.data);
-                        }
+                        if (results.data && results.data.length) appendData.push(...results.data);
                         loaded++;
                         if (loaded === files.length) {
                             rawData.push(...appendData);
                             populateFilterDropdowns();
                             applyFilters();
-                            document.getElementById('dataStatus').innerText = `Updated Dataset: ${rawData.length} pitches loaded`;
+                            document.getElementById('dataStatus').innerText = `Active Dataset: ${rawData.length} pitches loaded`;
                         }
                     }
                 });
             });
         }
 
-        // Populate Filter Select Elements
         function populateFilterDropdowns() {
             const pitcherSelect = document.getElementById('pitcherFilter');
             const pitchTypeSelect = document.getElementById('pitchTypeFilter');
 
-            const selectedPitcher = pitcherSelect.value;
-            const selectedPitchType = pitchTypeSelect.value;
-
-            const pitchers = Array.from(new Set(rawData.map(r => r.Pitcher || r.PitcherName || 'Unknown Pitcher'))).sort();
-            const pitchTypes = Array.from(new Set(rawData.map(r => r.TaggedPitchType || r.PitchType || 'Other'))).sort();
+            const pitchers = Array.from(new Set(rawData.map(r => r.Pitcher || 'Unknown'))).sort();
+            const pitchTypes = Array.from(new Set(rawData.map(r => r.TaggedPitchType || 'Other'))).sort();
 
             pitcherSelect.innerHTML = `<option value="ALL">All Pitchers (${pitchers.length} Pitchers)</option>` +
                 pitchers.map(p => `<option value="${p}">${p}</option>`).join('');
@@ -510,25 +520,17 @@
             pitchTypeSelect.innerHTML = `<option value="ALL">All Pitch Types</option>` +
                 pitchTypes.map(pt => `<option value="${pt}">${pt}</option>`).join('');
 
-            if (pitchers.includes(selectedPitcher)) pitcherSelect.value = selectedPitcher;
-            if (pitchTypes.includes(selectedPitchType)) pitchTypeSelect.value = selectedPitchType;
-
             document.getElementById('totalPitchCount').innerText = rawData.length.toLocaleString();
         }
 
-        // Filter Logic
         function applyFilters() {
             const pitcher = document.getElementById('pitcherFilter').value;
             const pitchType = document.getElementById('pitchTypeFilter').value;
 
             filteredData = rawData.filter(row => {
-                const pName = row.Pitcher || row.PitcherName || 'Unknown Pitcher';
-                const pType = row.TaggedPitchType || row.PitchType || 'Other';
-
-                const matchPitcher = (pitcher === 'ALL' || pName === pitcher);
-                const matchType = (pitchType === 'ALL' || pType === pitchType);
-
-                return matchPitcher && matchType;
+                const pName = row.Pitcher || 'Unknown';
+                const pType = row.TaggedPitchType || 'Other';
+                return (pitcher === 'ALL' || pName === pitcher) && (pitchType === 'ALL' || pType === pitchType);
             });
 
             document.getElementById('activePitchCount').innerText = filteredData.length.toLocaleString();
@@ -542,38 +544,30 @@
             applyFilters();
         }
 
-        // Aggregate Metrics for Table and KPI Bar
         function processData() {
             const groups = {};
-            let totalSwings = 0;
-            let totalWhiffs = 0;
-            let totalCS = 0;
-            let maxVelo = 0;
-            let sumVelo = 0;
-            let veloCount = 0;
+            let totalSwings = 0, totalWhiffs = 0, totalCS = 0;
+            let sumVelo = 0, veloCount = 0, maxVelo = 0;
+            let sumExitVelo = 0, exitVeloCount = 0, maxExitVelo = 0, hardHitCount = 0;
+
+            let gbCount = 0, fbCount = 0, ldCount = 0, popCount = 0;
 
             filteredData.forEach(row => {
-                const pitcher = row.Pitcher || row.PitcherName || 'Unknown Pitcher';
-                const pitchType = row.TaggedPitchType || row.PitchType || 'Other';
+                const pitcher = row.Pitcher || 'Unknown';
+                const pitchType = row.TaggedPitchType || 'Other';
                 const key = `${pitcher}__${pitchType}`;
 
                 if (!groups[key]) {
                     groups[key] = {
-                        Pitcher: pitcher,
-                        TaggedPitchType: pitchType,
-                        TotalPitches: 0,
-                        TotalVelo: 0,
-                        VeloCount: 0,
-                        Swings: 0,
-                        Whiffs: 0,
-                        CS: 0
+                        Pitcher: pitcher, TaggedPitchType: pitchType, TotalPitches: 0, TotalVelo: 0, VeloCount: 0,
+                        Swings: 0, Whiffs: 0, CS: 0, BattedBalls: 0, TotalExitVelo: 0, HardHit: 0
                     };
                 }
 
                 const grp = groups[key];
                 grp.TotalPitches++;
 
-                const velo = parseFloat(row.RelSpeed || row.PitchSpeed || row.Velocity);
+                const velo = parseFloat(row.RelSpeed || row.PitchSpeed);
                 if (!isNaN(velo) && velo > 0) {
                     grp.TotalVelo += velo;
                     grp.VeloCount++;
@@ -582,41 +576,50 @@
                     if (velo > maxVelo) maxVelo = velo;
                 }
 
-                const pitchCall = String(row.PitchCall || row.PitchResult || '').toLowerCase();
-                const isSwing = ['strikeswinging', 'foul', 'foulball', 'inplay', 'strike swinging', 'foul tip'].some(c => pitchCall.includes(c));
-                const isWhiff = pitchCall.includes('strikeswinging') || pitchCall.includes('strike swinging') || pitchCall.includes('whiff');
-                const isCalledStrike = pitchCall.includes('strikecalled') || pitchCall.includes('called strike');
+                const call = String(row.PitchCall || '').toLowerCase();
+                const isSwing = ['strikeswinging', 'foul', 'foulball', 'inplay', 'strike swinging'].some(c => call.includes(c));
+                const isWhiff = call.includes('strikeswinging') || call.includes('strike swinging');
+                const isCS = call.includes('strikecalled') || call.includes('called strike');
 
-                if (isSwing) {
-                    grp.Swings++;
-                    totalSwings++;
+                if (isSwing) { grp.Swings++; totalSwings++; }
+                if (isWhiff) { grp.Whiffs++; totalWhiffs++; }
+                if (isCS) { grp.CS++; totalCS++; }
+
+                const ev = parseFloat(row.ExitSpeed || row.ExitVelocity);
+                if (!isNaN(ev) && ev > 0) {
+                    grp.BattedBalls++;
+                    grp.TotalExitVelo += ev;
+                    sumExitVelo += ev;
+                    exitVeloCount++;
+                    if (ev > maxExitVelo) maxExitVelo = ev;
+                    if (ev >= 95) { grp.HardHit++; hardHitCount++; }
                 }
-                if (isWhiff) {
-                    grp.Whiffs++;
-                    totalWhiffs++;
-                }
-                if (isCalledStrike) {
-                    grp.CS++;
-                    totalCS++;
-                }
+
+                const ht = String(row.TaggedHitType || '').toLowerCase();
+                if (ht.includes('ground')) gbCount++;
+                else if (ht.includes('fly')) fbCount++;
+                else if (ht.includes('line')) ldCount++;
+                else if (ht.includes('pop')) popCount++;
             });
 
             aggregatedMetrics = Object.values(groups).map(g => {
                 const avgVelo = g.VeloCount ? (g.TotalVelo / g.VeloCount).toFixed(1) : '0.0';
-                const swingRate = g.TotalPitches ? ((g.Swings / g.TotalPitches) * 100).toFixed(1) : '0.0';
                 const whiffRate = g.Swings ? ((g.Whiffs / g.Swings) * 100).toFixed(1) : '0.0';
                 const cswRate = g.TotalPitches ? (((g.Whiffs + g.CS) / g.TotalPitches) * 100).toFixed(1) : '0.0';
+                const avgExitVelo = g.BattedBalls ? (g.TotalExitVelo / g.BattedBalls).toFixed(1) : '0.0';
+                const hardHitRate = g.BattedBalls ? ((g.HardHit / g.BattedBalls) * 100).toFixed(1) : '0.0';
 
                 return {
                     ...g,
                     AvgVelo: parseFloat(avgVelo),
-                    SwingRate: parseFloat(swingRate),
                     WhiffRate: parseFloat(whiffRate),
-                    CSWRate: parseFloat(cswRate)
+                    CSWRate: parseFloat(cswRate),
+                    AvgExitVelo: parseFloat(avgExitVelo),
+                    HardHitRate: parseFloat(hardHitRate)
                 };
             });
 
-            // Update KPI Cards
+            // Update Header KPI Cards
             document.getElementById('kpiTotalPitches').innerText = filteredData.length.toLocaleString();
             document.getElementById('kpiAvgVelo').innerText = veloCount ? (sumVelo / veloCount).toFixed(1) : '--';
             document.getElementById('kpiMaxVelo').innerText = `Max: ${maxVelo ? maxVelo.toFixed(1) : '--'} mph`;
@@ -629,14 +632,24 @@
             document.getElementById('kpiWhiffRate').innerText = `${overallWhiff}%`;
             document.getElementById('kpiTotalWhiffs').innerText = `Whiffs: ${totalWhiffs.toLocaleString()}`;
 
-            const overallCSW = filteredData.length ? (((totalWhiffs + totalCS) / filteredData.length) * 100).toFixed(1) : '0.0';
-            document.getElementById('kpiCSWRate').innerText = `${overallCSW}%`;
+            document.getElementById('kpiAvgExitVelo').innerText = exitVeloCount ? (sumExitVelo / exitVeloCount).toFixed(1) : '--';
+            document.getElementById('kpiMaxExitVelo').innerText = `Max: ${maxExitVelo ? maxExitVelo.toFixed(1) : '--'} mph`;
+
+            const overallHardHit = exitVeloCount ? ((hardHitCount / exitVeloCount) * 100).toFixed(1) : '0.0';
+            document.getElementById('kpiHardHitRate').innerText = `${overallHardHit}%`;
+            document.getElementById('kpiHardHitCount').innerText = `${hardHitCount} of ${exitVeloCount} Batted Balls`;
+
+            // Batted ball breakdowns
+            document.getElementById('countGroundBall').innerText = gbCount;
+            document.getElementById('countFlyBall').innerText = fbCount;
+            document.getElementById('countLineDrive').innerText = ldCount;
+            document.getElementById('countPopUp').innerText = popCount;
 
             renderTable();
             renderCharts();
+            renderStrikeZoneChart();
         }
 
-        // Render Sortable Data Table
         function renderTable() {
             const query = (document.getElementById('tableSearchInput').value || '').toLowerCase();
             let filtered = aggregatedMetrics.filter(m =>
@@ -646,19 +659,11 @@
             filtered.sort((a, b) => {
                 let valA = a[currentSortColumn];
                 let valB = b[currentSortColumn];
-                if (typeof valA === 'string') {
-                    return currentSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                }
+                if (typeof valA === 'string') return currentSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 return currentSortAsc ? valA - valB : valB - valA;
             });
 
             const tbody = document.getElementById('metricsTableBody');
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-500 font-sans">No matching records found.</td></tr>`;
-                return;
-            }
-
             tbody.innerHTML = filtered.map(row => {
                 const color = pitchColors[row.TaggedPitchType] || pitchColors['Other'];
                 return `
@@ -674,49 +679,41 @@
                     </td>
                     <td class="py-3 px-4 text-right">${row.TotalPitches}</td>
                     <td class="py-3 px-4 text-right">${row.AvgVelo}</td>
-                    <td class="py-3 px-4 text-right text-slate-400">${row.Swings}</td>
-                    <td class="py-3 px-4 text-right text-slate-400">${row.Whiffs}</td>
-                    <td class="py-3 px-4 text-right">${row.SwingRate}%</td>
                     <td class="py-3 px-4 text-right font-bold text-blue-400">${row.WhiffRate}%</td>
                     <td class="py-3 px-4 text-right font-bold text-green-400">${row.CSWRate}%</td>
+                    <td class="py-3 px-4 text-right text-slate-400">${row.BattedBalls}</td>
+                    <td class="py-3 px-4 text-right font-bold text-orange-400">${row.AvgExitVelo || '--'}</td>
+                    <td class="py-3 px-4 text-right font-bold text-red-400">${row.HardHitRate}%</td>
                 </tr>
             `}).join('');
         }
 
         function sortTable(col) {
-            if (currentSortColumn === col) {
-                currentSortAsc = !currentSortAsc;
-            } else {
-                currentSortColumn = col;
-                currentSortAsc = false;
-            }
+            if (currentSortColumn === col) currentSortAsc = !currentSortAsc;
+            else { currentSortColumn = col; currentSortAsc = false; }
             renderTable();
         }
 
         function setChartMetric(metric) {
             currentMetric = metric;
-            const btnWhiff = document.getElementById('btnMetricWhiff');
-            const btnSwing = document.getElementById('btnMetricSwing');
-            const btnBoth = document.getElementById('btnMetricBoth');
-
-            const activeClass = "px-2.5 py-1 rounded font-semibold transition bg-blue-600 text-white shadow";
-            const inactiveClass = "px-2.5 py-1 rounded font-medium text-slate-400 hover:text-white transition";
-
-            btnWhiff.className = metric === 'whiff' ? activeClass : inactiveClass;
-            btnSwing.className = metric === 'swing' ? activeClass : inactiveClass;
-            btnBoth.className = metric === 'both' ? activeClass : inactiveClass;
-
+            document.getElementById('btnMetricWhiff').className = metric === 'whiff' ? "px-2.5 py-1 rounded font-semibold bg-blue-600 text-white shadow" : "px-2.5 py-1 rounded text-slate-400 hover:text-white";
+            document.getElementById('btnMetricSwing').className = metric === 'swing' ? "px-2.5 py-1 rounded font-semibold bg-blue-600 text-white shadow" : "px-2.5 py-1 rounded text-slate-400 hover:text-white";
+            document.getElementById('btnMetricBoth').className = metric === 'both' ? "px-2.5 py-1 rounded font-semibold bg-blue-600 text-white shadow" : "px-2.5 py-1 rounded text-slate-400 hover:text-white";
             renderCharts();
         }
 
-        // Render Dynamic Chart.js Charts
+        function setEvMode(mode) {
+            currentEvMode = mode;
+            document.getElementById('btnEvAll').className = mode === 'all' ? "px-3 py-1.5 rounded-lg border border-blue-500 bg-blue-600/30 text-blue-300 font-semibold shadow" : "px-3 py-1.5 rounded-lg border border-cardBorder bg-darkBg text-slate-400 hover:text-white transition";
+            document.getElementById('btnEvContact').className = mode === 'contact' ? "px-3 py-1.5 rounded-lg border border-blue-500 bg-blue-600/30 text-blue-300 font-semibold shadow" : "px-3 py-1.5 rounded-lg border border-cardBorder bg-darkBg text-slate-400 hover:text-white transition";
+            document.getElementById('btnEvHard').className = mode === 'hard' ? "px-3 py-1.5 rounded-lg border border-blue-500 bg-blue-600/30 text-blue-300 font-semibold shadow" : "px-3 py-1.5 rounded-lg border border-cardBorder bg-darkBg text-slate-400 hover:text-white transition";
+            renderStrikeZoneChart();
+        }
+
         function renderCharts() {
-            // Group by Pitch Type for Matrix Bar Chart
             const typeAgg = {};
             aggregatedMetrics.forEach(m => {
-                if (!typeAgg[m.TaggedPitchType]) {
-                    typeAgg[m.TaggedPitchType] = { count: 0, swings: 0, whiffs: 0 };
-                }
+                if (!typeAgg[m.TaggedPitchType]) typeAgg[m.TaggedPitchType] = { count: 0, swings: 0, whiffs: 0 };
                 typeAgg[m.TaggedPitchType].count += m.TotalPitches;
                 typeAgg[m.TaggedPitchType].swings += m.Swings;
                 typeAgg[m.TaggedPitchType].whiffs += m.Whiffs;
@@ -726,27 +723,12 @@
             const swingRates = labels.map(l => typeAgg[l].count ? ((typeAgg[l].swings / typeAgg[l].count) * 100).toFixed(1) : 0);
             const whiffRates = labels.map(l => typeAgg[l].swings ? ((typeAgg[l].whiffs / typeAgg[l].swings) * 100).toFixed(1) : 0);
 
-            // Bar Chart Instance
             if (barChartInstance) barChartInstance.destroy();
             const barCtx = document.getElementById('barChartCanvas').getContext('2d');
 
             const datasets = [];
-            if (currentMetric === 'whiff' || currentMetric === 'both') {
-                datasets.push({
-                    label: 'Whiff %',
-                    data: whiffRates,
-                    backgroundColor: '#3b82f6',
-                    borderRadius: 6
-                });
-            }
-            if (currentMetric === 'swing' || currentMetric === 'both') {
-                datasets.push({
-                    label: 'Swing %',
-                    data: swingRates,
-                    backgroundColor: '#a855f7',
-                    borderRadius: 6
-                });
-            }
+            if (currentMetric === 'whiff' || currentMetric === 'both') datasets.push({ label: 'Whiff %', data: whiffRates, backgroundColor: '#3b82f6', borderRadius: 6 });
+            if (currentMetric === 'swing' || currentMetric === 'both') datasets.push({ label: 'Swing %', data: swingRates, backgroundColor: '#a855f7', borderRadius: 6 });
 
             barChartInstance = new Chart(barCtx, {
                 type: 'bar',
@@ -754,47 +736,23 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 } } },
-                        tooltip: {
-                            callbacks: {
-                                label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}%`
-                            }
-                        }
-                    },
                     scales: {
-                        x: {
-                            ticks: { color: '#94a3b8', font: { family: 'Inter' } },
-                            grid: { color: '#334155' }
-                        },
-                        y: {
-                            ticks: { color: '#94a3b8', font: { family: 'Inter' }, callback: (v) => v + '%' },
-                            grid: { color: '#334155' },
-                            max: 100,
-                            min: 0
-                        }
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                        y: { ticks: { color: '#94a3b8', callback: (v) => v + '%' }, grid: { color: '#334155' }, max: 100, min: 0 }
                     }
                 }
             });
 
-            // Scatter Chart (Pitch Movement Plot: HorzBreak vs InducedVertBreak)
             if (movementChartInstance) movementChartInstance.destroy();
             const moveCtx = document.getElementById('movementChartCanvas').getContext('2d');
 
-            const points = filteredData.filter(r => {
-                const hb = r.HorzBreak != null ? r.HorzBreak : r.pfx_x;
-                const ivb = r.InducedVertBreak != null ? r.InducedVertBreak : r.pfx_z;
-                return hb != null && ivb != null && !isNaN(hb) && !isNaN(ivb);
-            }).map(r => {
-                const pType = r.TaggedPitchType || r.PitchType || 'Other';
-                return {
-                    x: r.HorzBreak != null ? r.HorzBreak : r.pfx_x,
-                    y: r.InducedVertBreak != null ? r.InducedVertBreak : r.pfx_z,
-                    pitchType: pType,
-                    pitcher: r.Pitcher || r.PitcherName || 'Pitcher',
-                    velo: r.RelSpeed || r.PitchSpeed || '--'
-                };
-            });
+            const points = filteredData.map(r => ({
+                x: r.HorzBreak,
+                y: r.InducedVertBreak,
+                pitchType: r.TaggedPitchType || 'Other',
+                pitcher: r.Pitcher || 'Pitcher',
+                velo: r.RelSpeed || '--'
+            }));
 
             movementChartInstance = new Chart(moveCtx, {
                 type: 'scatter',
@@ -803,9 +761,121 @@
                         label: 'Pitches',
                         data: points,
                         pointBackgroundColor: points.map(p => pitchColors[p.pitchType] || pitchColors['Other']),
-                        pointBorderColor: 'transparent',
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { title: { display: true, text: 'Horizontal Break (in)', color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                        y: { title: { display: true, text: 'Induced Vertical Break (in)', color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+
+        // Render Home Plate & Strike Zone Visualizer Canvas
+        function renderStrikeZoneChart() {
+            if (strikeZoneChartInstance) strikeZoneChartInstance.destroy();
+            const canvas = document.getElementById('strikeZoneCanvas');
+            const ctx = canvas.getContext('2d');
+
+            let pts = filteredData.filter(r => r.PlateLocSide != null && r.PlateLocHeight != null);
+
+            if (currentEvMode === 'contact') {
+                pts = pts.filter(r => r.ExitSpeed != null && r.ExitSpeed > 0);
+            } else if (currentEvMode === 'hard') {
+                pts = pts.filter(r => r.ExitSpeed != null && r.ExitSpeed >= 95);
+            }
+
+            const scatterData = pts.map(r => {
+                const ev = r.ExitSpeed;
+                let color = '#475569'; // Default non-contact
+                let radius = 4;
+
+                if (ev != null && ev > 0) {
+                    if (ev >= 95) { color = '#ef4444'; radius = 7; } // Red hard hit
+                    else if (ev >= 85) { color = '#f97316'; radius = 5.5; } // Orange medium hit
+                    else { color = '#facc15'; radius = 4; } // Yellow soft hit
+                }
+
+                return {
+                    x: r.PlateLocSide,
+                    y: r.PlateLocHeight,
+                    ev: ev,
+                    pitcher: r.Pitcher,
+                    pitchType: r.TaggedPitchType,
+                    color: color,
+                    radius: radius
+                };
+            });
+
+            // Strike Zone Overlay Plugin
+            const strikeZoneOverlay = {
+                id: 'strikeZoneOverlay',
+                beforeDraw: (chart) => {
+                    const { ctx, scales: { x, y } } = chart;
+                    
+                    // Strike zone bounds (-0.83 to 0.83 ft horizontally, 1.5 to 3.5 ft vertically)
+                    const xLeft = x.getPixelForValue(-0.83);
+                    const xRight = x.getPixelForValue(0.83);
+                    const yTop = y.getPixelForValue(3.5);
+                    const yBottom = y.getPixelForValue(1.5);
+                    const width = xRight - xLeft;
+                    const height = yBottom - yTop;
+
+                    // Draw Strike Zone Outer Box
+                    ctx.save();
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.lineWidth = 2.5;
+                    ctx.strokeRect(xLeft, yTop, width, height);
+                    ctx.fillStyle = 'rgba(56, 189, 248, 0.05)';
+                    ctx.fillRect(xLeft, yTop, width, height);
+
+                    // Inner 3x3 Grid
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(xLeft + width / 3, yTop); ctx.lineTo(xLeft + width / 3, yBottom);
+                    ctx.moveTo(xLeft + (2 * width) / 3, yTop); ctx.lineTo(xLeft + (2 * width) / 3, yBottom);
+                    ctx.moveTo(xLeft, yTop + height / 3); ctx.lineTo(xRight, yTop + height / 3);
+                    ctx.moveTo(xLeft, yTop + (2 * height) / 3); ctx.lineTo(xRight, yTop + (2 * height) / 3);
+                    ctx.stroke();
+
+                    // Home Plate Polygon at bottom (z = 0.5 to 0.1)
+                    const xCenter = x.getPixelForValue(0);
+                    const yPlateTop = y.getPixelForValue(0.5);
+                    const yPlateBottom = y.getPixelForValue(0.15);
+                    const xPlateLeft = x.getPixelForValue(-0.83);
+                    const xPlateRight = x.getPixelForValue(0.83);
+
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.strokeStyle = '#94a3b8';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(xPlateLeft, yPlateTop);
+                    ctx.lineTo(xPlateRight, yPlateTop);
+                    ctx.lineTo(xPlateRight, yPlateTop + (yPlateBottom - yPlateTop) * 0.5);
+                    ctx.lineTo(xCenter, yPlateBottom);
+                    ctx.lineTo(xPlateLeft, yPlateTop + (yPlateBottom - yPlateTop) * 0.5);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.restore();
+                }
+            };
+
+            strikeZoneChartInstance = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Pitches',
+                        data: scatterData,
+                        pointBackgroundColor: scatterData.map(p => p.color),
+                        pointRadius: scatterData.map(p => p.radius)
                     }]
                 },
                 options: {
@@ -817,32 +887,41 @@
                             callbacks: {
                                 label: (ctx) => {
                                     const p = ctx.raw;
-                                    return `${p.pitcher} (${p.pitchType}): ${p.velo} mph | HB: ${p.x}", IVB: ${p.y}"`;
+                                    return `${p.pitcher} (${p.pitchType}): EV ${p.ev ? p.ev + ' mph' : 'No Contact'}`;
                                 }
                             }
                         }
                     },
                     scales: {
                         x: {
-                            title: { display: true, text: 'Horizontal Break (in)', color: '#94a3b8', font: { family: 'Inter', size: 11 } },
-                            ticks: { color: '#94a3b8', font: { family: 'Inter' } },
-                            grid: {
-                                color: (ctx) => ctx.tick.value === 0 ? '#64748b' : '#334155',
-                                lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1
-                            }
+                            min: -2.0, max: 2.0,
+                            title: { display: true, text: 'Plate Location Horizontal (ft)', color: '#94a3b8' },
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: '#334155' }
                         },
                         y: {
-                            title: { display: true, text: 'Induced Vertical Break (in)', color: '#94a3b8', font: { family: 'Inter', size: 11 } },
-                            ticks: { color: '#94a3b8', font: { family: 'Inter' } },
-                            grid: {
-                                color: (ctx) => ctx.tick.value === 0 ? '#64748b' : '#334155',
-                                lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1
-                            }
+                            min: 0.0, max: 4.5,
+                            title: { display: true, text: 'Plate Location Height (ft)', color: '#94a3b8' },
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: '#334155' }
                         }
                     }
-                }
+                },
+                plugins: [strikeZoneOverlay]
             });
         }
     </script>
 </body>
 </html>
+```
+
+### Key Features Included
+1. **Interactive Strike Zone & Home Plate Visualizer Canvas:**
+   - Plots precise horizontal (`PlateLocSide`) and vertical (`PlateLocHeight`) pitch coordinates relative to a drawn strike zone and pentagonal Home Plate.
+   - Point sizes scale and dynamically color-code by **Exit Velocity** (Red for Hard Hit 95+ mph, Orange for Medium 85–94.9 mph, Yellow for Soft < 85 mph).
+2. **Display Mode Toggles:** Switch between **All Pitches**, **Batted Balls Only**, or **Hard Hit (95+ mph)**.
+3. **Batted Ball Breakdown Sidebar:** Summarizes Ground Balls, Fly Balls, Line Drives, and Popups.
+4. **Interactive Charts & Matrix Table:**
+   - Swing & Whiff bar chart matrix.
+   - Horizontal vs. Vertical Movement Profile scatter chart.
+   - Comprehensive, sortable table with Exit Velocity & Hard Hit % stats per pitcher/pitch type.
