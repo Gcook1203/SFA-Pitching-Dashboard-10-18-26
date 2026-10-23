@@ -1,5 +1,63 @@
 <!DOCTYPE html>
-                        <i class="fa-chart-column text-accentBlue"></i> Swing & Whiff Rate Matrix
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrackMan Pitching Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0f172a',
+                        cardBg: '#1e293b',
+                        cardBorder: '#334155',
+                        accentBlue: '#3b82f6',
+                        accentPurple: '#a855f7',
+                        accentGreen: '#22c55e'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col p-4 md:p-8">
+
+    <!-- Header Controls & Upload Bar -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-baseball text-blue-500"></i> TrackMan Analytics Suite
+            </h1>
+            <p class="text-xs text-gray-400">Interactive Pitch Metrics & Movement Profiles</p>
+        </div>
+        <label class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs px-4 py-2.5 rounded-lg cursor-pointer transition shadow flex items-center gap-2">
+            <i class="fa-solid fa-file-import"></i> Import TrackMan CSV(s)
+            <input type="file" id="fileInput" multiple accept=".csv" class="hidden">
+        </label>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Chart 1: Swing & Whiff Matrix -->
+        <div class="bg-cardBg border border-cardBorder rounded-xl p-5 shadow-md flex flex-col justify-between">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-column text-accentBlue"></i> Swing & Whiff Rate Matrix
                     </h2>
                     <p class="text-xs text-gray-400">Swing % and Whiff % grouped by pitch classification</p>
                 </div>
@@ -9,13 +67,13 @@
                     <button id="btnMetricBoth" onclick="setChartMetric('both')" class="px-2.5 py-1 rounded font-medium text-gray-400 hover:text-white transition">Both</button>
                 </div>
             </div>
-  
+
             <div class="relative w-full h-[320px]">
                 <canvas id="barChartCanvas"></canvas>
             </div>
         </div>
-  
-        <!-- Chart 2: Pitch Movement Plot (IVB vs HB) -->
+
+        <!-- Chart 2: Pitch Movement Plot -->
         <div class="bg-cardBg border border-cardBorder rounded-xl p-5 shadow-md flex flex-col justify-between">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                 <div>
@@ -26,14 +84,13 @@
                 </div>
                 <span class="text-xs bg-darkBg border border-cardBorder px-2.5 py-1 rounded text-gray-400 font-mono">Inches (in)</span>
             </div>
-  
+
             <div class="relative w-full h-[320px]">
                 <canvas id="movementChartCanvas"></canvas>
             </div>
         </div>
-  
     </div>
-  
+
     <!-- Pitcher Breakdown Table -->
     <div class="bg-cardBg border border-cardBorder rounded-xl p-5 shadow-md mb-6">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
@@ -50,7 +107,7 @@
                 <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-gray-500"></i>
             </div>
         </div>
-  
+
         <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left text-sm text-gray-300">
                 <thead class="bg-darkBg text-xs uppercase text-gray-400 border-b border-cardBorder">
@@ -67,12 +124,12 @@
                     </tr>
                 </thead>
                 <tbody id="metricsTableBody" class="divide-y divide-cardBorder font-mono text-xs">
-                    <!-- Dynamic Rows -->
+                    <tr><td colspan="9" class="py-6 text-center text-gray-500">No data loaded yet. Drop CSV files below or click Import.</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
-  
+
     <!-- Drag & Drop Zone -->
     <div id="dropZone" class="border-2 border-dashed border-gray-700 hover:border-blue-500 rounded-xl p-8 text-center transition cursor-pointer bg-darkBg/50 mb-6">
         <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-500 mb-3"></i>
@@ -80,18 +137,220 @@
         <p class="text-sm text-gray-500">Or click "Import TrackMan CSV(s)" button above</p>
         <p class="text-xs text-gray-600 mt-2">Supports multiple files • Accepts *_unverified.csv format</p>
     </div>
-  
+
     <!-- Footer -->
     <footer class="mt-auto pt-4 border-t border-cardBorder text-center text-xs text-gray-500 flex flex-col sm:flex-row justify-between items-center gap-2">
         <p>TrackMan Analytics Suite &bull; ANLY 608 Interactive Dashboard</p>
         <p id="dataStatus">No data loaded - Please upload CSV files</p>
     </footer>
-  
+
     <!-- JavaScript Application Logic -->
     <script>
-        // Initialize with empty data array
         let rawData = [];
+        let aggregatedMetrics = [];
         let currentMetric = 'whiff';
         let barChartInstance = null;
         let movementChartInstance = null;
-        let
+        let currentSortColumn = 'TotalPitches';
+        let currentSortAsc = false;
+
+        // Color mapping for pitch types
+        const pitchColors = {
+            'Fastball': '#ef4444', 'FourSeam': '#ef4444', 'Sinker': '#f97316',
+            'Changeup': '#3b82f6', 'Slider': '#a855f7', 'Cutter': '#eab308',
+            'Curveball': '#10b981', 'Other': '#64748b'
+        };
+
+        // File Input & Drag and Drop Handlers
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-blue-500'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500');
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        function handleFiles(files) {
+            let loadedCount = 0;
+            Array.from(files).forEach(file => {
+                Papa.parse(file, {
+                    header: true,
+                    dynamicTyping: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        rawData.push(...results.data);
+                        loadedCount++;
+                        if (loadedCount === files.length) {
+                            processData();
+                        }
+                    }
+                });
+            });
+        }
+
+        function processData() {
+            if (rawData.length === 0) return;
+
+            // Aggregation by Pitcher and TaggedPitchType
+            const groups = {};
+            rawData.forEach(row => {
+                const pitcher = row.Pitcher || row.PitcherName || 'Unknown';
+                const pitchType = row.TaggedPitchType || row.PitchType || 'Other';
+                const key = `${pitcher}_${pitchType}`;
+
+                if (!groups[key]) {
+                    groups[key] = { Pitcher: pitcher, TaggedPitchType: pitchType, TotalPitches: 0, TotalVelo: 0, Swings: 0, Whiffs: 0, CS: 0 };
+                }
+
+                const grp = groups[key];
+                grp.TotalPitches++;
+                if (row.RelSpeed) grp.TotalVelo += row.RelSpeed;
+
+                const pitchCall = (row.PitchCall || '').toLowerCase();
+                if (['strike swinging', 'foul ball', 'in play'].some(c => pitchCall.includes(c))) grp.Swings++;
+                if (pitchCall.includes('strike swinging')) grp.Whiffs++;
+                if (pitchCall.includes('called strike')) grp.CS++;
+            });
+
+            aggregatedMetrics = Object.values(groups).map(g => {
+                const avgVelo = g.TotalPitches ? (g.TotalVelo / g.TotalPitches).toFixed(1) : '0.0';
+                const swingRate = g.TotalPitches ? ((g.Swings / g.TotalPitches) * 100).toFixed(1) : '0.0';
+                const whiffRate = g.Swings ? ((g.Whiffs / g.Swings) * 100).toFixed(1) : '0.0';
+                const cswRate = g.TotalPitches ? (((g.Whiffs + g.CS) / g.TotalPitches) * 100).toFixed(1) : '0.0';
+
+                return { ...g, AvgVelo: parseFloat(avgVelo), SwingRate: parseFloat(swingRate), WhiffRate: parseFloat(whiffRate), CSWRate: parseFloat(cswRate) };
+            });
+
+            document.getElementById('dataStatus').innerText = `Loaded ${rawData.length} pitch records across ${aggregatedMetrics.length} groups.`;
+            renderTable();
+            renderCharts();
+        }
+
+        function renderTable() {
+            const query = document.getElementById('tableSearchInput').value.toLowerCase();
+            let filtered = aggregatedMetrics.filter(m =>
+                m.Pitcher.toLowerCase().includes(query) || m.TaggedPitchType.toLowerCase().includes(query)
+            );
+
+            filtered.sort((a, b) => {
+                let valA = a[currentSortColumn], valB = b[currentSortColumn];
+                if (typeof valA === 'string') return currentSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                return currentSortAsc ? valA - valB : valB - valA;
+            });
+
+            const tbody = document.getElementById('metricsTableBody');
+            tbody.innerHTML = filtered.map(row => `
+                <tr class="hover:bg-slate-800/50">
+                    <td class="py-3 px-4 font-sans font-medium text-white">${row.Pitcher}</td>
+                    <td class="py-3 px-4 font-sans">${row.TaggedPitchType}</td>
+                    <td class="py-3 px-4 text-right">${row.TotalPitches}</td>
+                    <td class="py-3 px-4 text-right">${row.AvgVelo}</td>
+                    <td class="py-3 px-4 text-right">${row.Swings}</td>
+                    <td class="py-3 px-4 text-right">${row.Whiffs}</td>
+                    <td class="py-3 px-4 text-right">${row.SwingRate}%</td>
+                    <td class="py-3 px-4 text-right text-blue-400 font-bold">${row.WhiffRate}%</td>
+                    <td class="py-3 px-4 text-right text-green-400 font-bold">${row.CSWRate}%</td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('tableSearchInput').addEventListener('input', renderTable);
+
+        function sortTable(col) {
+            if (currentSortColumn === col) { currentSortAsc = !currentSortAsc; }
+            else { currentSortColumn = col; currentSortAsc = false; }
+            renderTable();
+        }
+
+        function setChartMetric(metric) {
+            currentMetric = metric;
+            ['Whiff', 'Swing', 'Both'].forEach(m => {
+                const btn = document.getElementById(`btnMetric${m}`);
+                if (m.toLowerCase() === metric) {
+                    btn.className = "px-2.5 py-1 rounded font-medium transition bg-blue-600 text-white shadow";
+                } else {
+                    btn.className = "px-2.5 py-1 rounded font-medium text-gray-400 hover:text-white transition";
+                }
+            });
+            renderCharts();
+        }
+
+        function renderCharts() {
+            // Aggregation by Pitch Type for Bar Chart
+            const pitchTypeGroups = {};
+            aggregatedMetrics.forEach(m => {
+                if (!pitchTypeGroups[m.TaggedPitchType]) pitchTypeGroups[m.TaggedPitchType] = { count: 0, swings: 0, whiffs: 0 };
+                pitchTypeGroups[m.TaggedPitchType].count += m.TotalPitches;
+                pitchTypeGroups[m.TaggedPitchType].swings += m.Swings;
+                pitchTypeGroups[m.TaggedPitchType].whiffs += m.Whiffs;
+            });
+
+            const labels = Object.keys(pitchTypeGroups);
+            const swingData = labels.map(l => pitchTypeGroups[l].count ? ((pitchTypeGroups[l].swings / pitchTypeGroups[l].count) * 100).toFixed(1) : 0);
+            const whiffData = labels.map(l => pitchTypeGroups[l].swings ? ((pitchTypeGroups[l].whiffs / pitchTypeGroups[l].swings) * 100).toFixed(1) : 0);
+
+            // Bar Chart
+            if (barChartInstance) barChartInstance.destroy();
+            const barCtx = document.getElementById('barChartCanvas').getContext('2d');
+            
+            const datasets = [];
+            if (currentMetric === 'whiff' || currentMetric === 'both') {
+                datasets.push({ label: 'Whiff %', data: whiffData, backgroundColor: '#3b82f6' });
+            }
+            if (currentMetric === 'swing' || currentMetric === 'both') {
+                datasets.push({ label: 'Swing %', data: swingData, backgroundColor: '#a855f7' });
+            }
+
+            barChartInstance = new Chart(barCtx, {
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8' } } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' }, max: 100 }
+                    }
+                }
+            });
+
+            // Movement Chart (Scatter IVB vs HorzBreak)
+            if (movementChartInstance) movementChartInstance.destroy();
+            const moveCtx = document.getElementById('movementChartCanvas').getContext('2d');
+
+            const scatterData = rawData.filter(r => r.HorzBreak != null && r.InducedVertBreak != null).map(r => ({
+                x: r.HorzBreak,
+                y: r.InducedVertBreak,
+                pitchType: r.TaggedPitchType || 'Other'
+            }));
+
+            movementChartInstance = new Chart(moveCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Pitch Movement',
+                        data: scatterData,
+                        pointBackgroundColor: scatterData.map(d => pitchColors[d.pitchType] || '#64748b'),
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { title: { display: true, text: 'Horizontal Break (in)', color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                        y: { title: { display: true, text: 'Induced Vertical Break (in)', color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
