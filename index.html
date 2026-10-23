@@ -29,6 +29,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Load Embedded Dataset -->
+    <script src="dataset.js"></script>
     <style>
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #0b0f19; }
@@ -43,7 +45,7 @@
             <h1 class="text-2xl font-bold text-white flex items-center gap-2">
                 <i class="fa-solid fa-baseball text-blue-500"></i> TrackMan Analytics Suite
             </h1>
-            <p class="text-xs text-gray-400">Interactive Pitching & Exit Velocity Grid Heatmap Analysis</p>
+            <p class="text-xs text-gray-400">Interactive Pitching, Exit Velocity & 3x3 Grid Heatmap Analysis</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
@@ -57,7 +59,7 @@
                 <option value="ALL">All Pitch Types</option>
             </select>
 
-            <!-- Import CSV Button -->
+            <!-- Upload CSV Button -->
             <label class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-4 py-2 rounded-lg cursor-pointer transition shadow flex items-center gap-2">
                 <i class="fa-solid fa-file-import"></i> Upload CSV(s)
                 <input type="file" id="fileInput" multiple accept=".csv" class="hidden">
@@ -65,7 +67,7 @@
         </div>
     </div>
 
-    <!-- KPI Summary Bar -->
+    <!-- Summary KPI Bar -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         <div class="bg-cardBg border border-cardBorder rounded-xl p-3 text-center">
             <span class="text-xs text-gray-400">Total Pitches</span>
@@ -102,7 +104,7 @@
                     <h2 class="text-base font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-chart-column text-accentBlue"></i> Swing & Whiff Rate Matrix
                     </h2>
-                    <p class="text-xs text-gray-400">Includes exact counts + percentages in tooltips</p>
+                    <p class="text-xs text-gray-400">Raw Counts & Percentages grouped by pitch classification</p>
                 </div>
                 <div class="inline-flex bg-darkBg p-1 rounded-lg border border-cardBorder text-xs">
                     <button id="btnMetricWhiff" onclick="setChartMetric('whiff')" class="px-2 py-1 rounded text-gray-400 hover:text-white">Whiff %</button>
@@ -132,17 +134,17 @@
         </div>
     </div>
 
-    <!-- Chart Row 2: Strike Zone Visualizer with Grid Heatmap Overlay -->
+    <!-- Chart Row 2: Strike Zone & Grid Heatmap Visualizer -->
     <div class="bg-cardBg border border-cardBorder rounded-xl p-5 mb-6">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
             <div>
                 <h2 class="text-base font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-crosshairs text-amber-500"></i> Strike Zone & Grid Heatmap Visualizer
                 </h2>
-                <p class="text-xs text-gray-400">3x3 Strike Zone grid overlay calculated by pitch location density & exit velocity</p>
+                <p class="text-xs text-gray-400">3x3 Strike Zone grid calculated by pitch density and exit velocity</p>
             </div>
 
-            <!-- Heatmap Mode Controls -->
+            <!-- Heatmap View Controls -->
             <div class="flex items-center gap-2 text-xs">
                 <span class="text-gray-400">View Mode:</span>
                 <div class="inline-flex bg-darkBg p-1 rounded-lg border border-cardBorder">
@@ -174,7 +176,7 @@
                     <div id="battedCountVal" class="text-xl font-bold text-purple-400">0</div>
                 </div>
                 <div class="text-gray-400 leading-relaxed bg-darkBg/40 p-3 rounded-lg border border-cardBorder/50">
-                    <i class="fa-solid fa-fire text-amber-400 mr-1"></i> The 3x3 grid heatmap calculates pitch count density and average exit velocity in each zone. Warmer red/amber squares indicate high contact intensity or pitch concentration.
+                    <i class="fa-solid fa-fire text-amber-400 mr-1"></i> Color-coded 3x3 grid displays pitch count and average exit velocity per zone square. Warmer colors indicate high density and hard contact.
                 </div>
             </div>
         </div>
@@ -187,7 +189,7 @@
                 <h2 class="text-lg font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-table text-accentGreen"></i> Detailed Pitch Metrics Matrix
                 </h2>
-                <p class="text-xs text-gray-400">Sortable table with exact counts and rate percentages</p>
+                <p class="text-xs text-gray-400">Sortable table displaying exact counts alongside rate percentages</p>
             </div>
             <input type="text" id="tableSearchInput" oninput="renderTable()" placeholder="Filter pitcher or pitch..." class="bg-darkBg text-gray-200 text-xs border border-cardBorder rounded-lg px-3 py-2 w-full sm:w-64 focus:outline-none focus:ring-1 focus:ring-blue-500">
         </div>
@@ -220,13 +222,13 @@
         <p class="text-sm font-medium text-gray-300">Drag & Drop Additional TrackMan CSV Files Here</p>
     </div>
 
-    <!-- JavaScript Application -->
+    <!-- Application Script Logic -->
     <script>
-        let rawData = [];
+        let rawData = typeof EMBEDDED_PITCHES !== 'undefined' ? EMBEDDED_PITCHES : [];
         let filteredData = [];
         let aggregatedMetrics = [];
         let currentMetric = 'swing';
-        let currentHeatmapView = 'heatmap'; // 'points', 'heatmap', 'both'
+        let currentHeatmapView = 'heatmap';
 
         let barChartInstance = null;
         let movementChartInstance = null;
@@ -240,7 +242,7 @@
             'Cutter': '#eab308', 'Curveball': '#10b981', 'Other': '#64748b'
         };
 
-        // File Handler
+        // File Handler for CSVs
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
 
@@ -382,7 +384,7 @@
         }
 
         function renderCharts() {
-            // 1. Bar Chart (Matrix) with raw numbers
+            // Bar Chart with Raw Numbers in Tooltip
             const typeStats = {};
             filteredData.forEach(r => {
                 const t = r.t || 'Other';
@@ -444,7 +446,7 @@
                 }
             });
 
-            // 2. Pitch Movement Chart
+            // Pitch Movement Scatter Chart
             if (movementChartInstance) movementChartInstance.destroy();
             const moveCtx = document.getElementById('movementChartCanvas').getContext('2d');
             const moveData = filteredData.filter(r => r.hb != null && r.ivb != null).map(r => ({
@@ -480,18 +482,16 @@
             renderStrikeZoneChart();
         }
 
-        // Custom Plugin for 3x3 Zone Grid Heatmap Overlay
+        // Plugin for 3x3 Grid Overlay
         const strikeZoneGridPlugin = {
             id: 'strikeZoneGridHeatmap',
             beforeDraw(chart) {
                 const { ctx, chartArea: { left, top, width, height }, scales: { x, y } } = chart;
                 ctx.save();
 
-                // 3x3 Strike Zone Boundaries in Feet (x: -0.83 to 0.83, y: 1.5 to 3.5)
                 const xBounds = [-0.83, -0.27, 0.27, 0.83];
-                const yBounds = [3.5, 2.83, 2.17, 1.5]; // top to bottom
+                const yBounds = [3.5, 2.83, 2.17, 1.5];
 
-                // If Heatmap or Overlay mode is selected, calculate density & draw zone squares
                 if (currentHeatmapView === 'heatmap' || currentHeatmapView === 'both') {
                     const gridCounts = Array(3).fill(0).map(() => Array(3).fill(0));
                     const gridEvs = Array(3).fill(0).map(() => Array(3).fill(0));
@@ -499,18 +499,14 @@
 
                     filteredData.forEach(r => {
                         if (r.px != null && r.pz != null) {
-                            // Map px (-0.83 to 0.83) to col (0,1,2)
                             let col = r.px < -0.27 ? 0 : (r.px < 0.27 ? 1 : 2);
-                            // Map pz (1.5 to 3.5) to row (0,1,2)
                             let row = r.pz > 2.83 ? 0 : (r.pz > 2.17 ? 1 : 2);
-
                             gridCounts[row][col]++;
                             if (r.ev) gridEvs[row][col] += r.ev;
                             if (gridCounts[row][col] > maxCount) maxCount = gridCounts[row][col];
                         }
                     });
 
-                    // Draw filled heat squares
                     for (let r = 0; r < 3; r++) {
                         for (let c = 0; c < 3; c++) {
                             const x1 = x.getPixelForValue(xBounds[c]);
@@ -521,7 +517,6 @@
                             const count = gridCounts[r][c];
                             const intensity = count / maxCount;
                             
-                            // Color transition from dark blue -> purple -> amber/red
                             const alpha = currentHeatmapView === 'both' ? 0.35 : 0.65;
                             let color = `rgba(30, 41, 59, ${alpha})`;
                             if (intensity > 0.7) color = `rgba(239, 68, 68, ${alpha})`;
@@ -531,7 +526,6 @@
                             ctx.fillStyle = color;
                             ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
 
-                            // Draw Zone Text Overlay
                             ctx.fillStyle = '#ffffff';
                             ctx.font = 'bold 11px sans-serif';
                             ctx.textAlign = 'center';
@@ -546,7 +540,6 @@
                     }
                 }
 
-                // Draw Outer 3x3 Strike Zone Grid Outline
                 ctx.strokeStyle = '#64748b';
                 ctx.lineWidth = 2;
                 const szX1 = x.getPixelForValue(-0.83);
@@ -555,7 +548,6 @@
                 const szY2 = y.getPixelForValue(1.5);
                 ctx.strokeRect(szX1, szY1, szX2 - szX1, szY2 - szY1);
 
-                // Draw Grid Division Lines
                 ctx.lineWidth = 1;
                 ctx.strokeStyle = 'rgba(226, 232, 240, 0.4)';
                 [ -0.27, 0.27 ].forEach(xv => {
@@ -567,7 +559,7 @@
                     ctx.beginPath(); ctx.moveTo(szX1, py); ctx.lineTo(szX2, py); ctx.stroke();
                 });
 
-                // Draw Home Plate Polygon at Bottom
+                // Home Plate Polygon
                 ctx.fillStyle = '#f8fafc';
                 ctx.strokeStyle = '#94a3b8';
                 ctx.lineWidth = 1.5;
