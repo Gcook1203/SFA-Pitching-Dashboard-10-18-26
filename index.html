@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrackMan Baseball Analytics & Exit Velocity Dashboard</title>
+    <title>TrackMan Baseball Analytics & Contact Exit Velocity Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -70,7 +70,7 @@
                 <i class="fa-solid fa-baseball text-blue-500"></i> TrackMan Analytics Suite
                 <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30">1,275 Baked Pitches</span>
             </h1>
-            <p class="text-xs text-gray-400">ANLY 608 Interactive Pitching, Exit Velocity & 3x3 Grid Heatmap Analysis</p>
+            <p class="text-xs text-gray-400">ANLY 608 Interactive Pitching, Exit Velocity & 3x3 Grid Contact Heatmap Analysis</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
@@ -168,22 +168,22 @@
             </div>
         </div>
 
-        <!-- Strike Zone & 3x3 Heatmap Grid Visualizer -->
+        <!-- Strike Zone & 3x3 Heatmap Grid Visualizer (Focuses Strictly on Contact Hits) -->
         <div class="bg-cardBg border border-cardBorder rounded-xl p-5 shadow-md">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                 <div>
                     <h2 class="text-base font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-crosshairs text-amber-500"></i> Strike Zone & Grid Heatmap Visualizer
+                        <i class="fa-solid fa-crosshairs text-amber-500"></i> Contact & Exit Velocity Heatmap Visualizer
                     </h2>
-                    <p class="text-xs text-gray-400">3x3 Strike Zone grid calculated by pitch location density & average contact exit velocity (mph)</p>
+                    <p class="text-xs text-gray-400">3x3 Strike Zone grid measuring contact frequency (hits) & average contact exit velocity (mph)</p>
                 </div>
 
                 <!-- Heatmap View Mode Controls -->
                 <div class="flex items-center gap-2 text-xs">
                     <span class="text-gray-400 font-medium">View Mode:</span>
                     <div class="inline-flex bg-darkBg p-1 rounded-lg border border-cardBorder">
-                        <button id="btnViewPoints" onclick="setHeatmapView('points')" class="px-2.5 py-1 rounded text-gray-400 hover:text-white transition">Pitches Only</button>
-                        <button id="btnViewHeatmap" onclick="setHeatmapView('heatmap')" class="px-2.5 py-1 rounded bg-blue-600 text-white font-semibold shadow transition">3x3 Grid Heatmap</button>
+                        <button id="btnViewPoints" onclick="setHeatmapView('points')" class="px-2.5 py-1 rounded text-gray-400 hover:text-white transition">Hits Only</button>
+                        <button id="btnViewHeatmap" onclick="setHeatmapView('heatmap')" class="px-2.5 py-1 rounded bg-blue-600 text-white font-semibold shadow transition">3x3 Contact Heatmap</button>
                         <button id="btnViewBoth" onclick="setHeatmapView('both')" class="px-2.5 py-1 rounded text-gray-400 hover:text-white transition">Combined Overlay</button>
                     </div>
                 </div>
@@ -206,11 +206,11 @@
                         <div id="maxEvVal" class="text-2xl font-extrabold text-blue-400 font-mono">0.0 mph</div>
                     </div>
                     <div class="bg-darkBg p-3.5 rounded-lg border border-cardBorder">
-                        <div class="text-gray-400 mb-1">Batted Ball Events Tracked</div>
+                        <div class="text-gray-400 mb-1">Batted Ball Contact Events Tracked</div>
                         <div id="battedCountVal" class="text-2xl font-extrabold text-purple-400 font-mono">0</div>
                     </div>
                     <div class="text-gray-400 leading-relaxed bg-darkBg/40 p-3 rounded-lg border border-cardBorder/50">
-                        <i class="fa-solid fa-fire text-amber-400 mr-1"></i> The 3x3 strike zone grid displays total pitch counts (<strong class="text-white font-mono">p</strong>) and average exit velocity (<strong class="text-amber-400 font-mono">mph</strong>) in each zone square. Red/amber highlights indicate high concentration or hard contact.
+                        <i class="fa-solid fa-fire text-amber-400 mr-1"></i> This chart strictly isolates pitches where the ball was hit. The 3x3 strike zone grid displays contact frequency (<strong class="text-white font-mono">hits</strong>) and average hit speed (<strong class="text-amber-400 font-mono">mph</strong>) per square.
                     </div>
                 </div>
             </div>
@@ -671,7 +671,7 @@
             });
         }
 
-        // Custom Plugin for 3x3 Grid Overlay
+        // Custom Plugin for 3x3 Grid Overlay (STRICTLY CONTACT / HIT BALLS)
         const strikeZoneGridPlugin = {
             id: 'strikeZoneGridHeatmap',
             beforeDraw(chart) {
@@ -682,17 +682,19 @@
                 const yBounds = [3.5, 2.83, 2.17, 1.5];
 
                 if (currentHeatmapView === 'heatmap' || currentHeatmapView === 'both') {
-                    const gridCounts = Array(3).fill(0).map(() => Array(3).fill(0));
+                    const gridHits = Array(3).fill(0).map(() => Array(3).fill(0));
                     const gridEvs = Array(3).fill(0).map(() => Array(3).fill(0));
-                    let maxCount = 1;
+                    let maxHits = 1;
 
+                    // FILTER STRICTLY FOR PITCHES THAT WERE HIT WITH AN EXIT VELOCITY
                     filteredData.forEach(r => {
-                        if (r.px != null && r.pz != null) {
+                        if (r.px != null && r.pz != null && r.ev != null && r.ev > 0) {
                             let col = r.px < -0.27 ? 0 : (r.px < 0.27 ? 1 : 2);
                             let row = r.pz > 2.83 ? 0 : (r.pz > 2.17 ? 1 : 2);
-                            gridCounts[row][col]++;
-                            if (r.ev) gridEvs[row][col] += r.ev;
-                            if (gridCounts[row][col] > maxCount) maxCount = gridCounts[row][col];
+                            
+                            gridHits[row][col]++;
+                            gridEvs[row][col] += r.ev;
+                            if (gridHits[row][col] > maxHits) maxHits = gridHits[row][col];
                         }
                     });
 
@@ -703,14 +705,23 @@
                             const y1 = y.getPixelForValue(yBounds[r]);
                             const y2 = y.getPixelForValue(yBounds[r + 1]);
 
-                            const count = gridCounts[r][c];
-                            const intensity = count / maxCount;
+                            const hits = gridHits[r][c];
+                            const avgEv = hits ? (gridEvs[r][c] / hits) : 0;
+                            const intensity = hits / maxHits;
                             
-                            const alpha = currentHeatmapView === 'both' ? 0.35 : 0.65;
-                            let color = `rgba(30, 41, 59, ${alpha})`;
-                            if (intensity > 0.7) color = `rgba(239, 68, 68, ${alpha})`;
-                            else if (intensity > 0.4) color = `rgba(245, 158, 11, ${alpha})`;
-                            else if (intensity > 0.1) color = `rgba(59, 130, 246, ${alpha})`;
+                            const alpha = currentHeatmapView === 'both' ? 0.40 : 0.70;
+                            let color = `rgba(30, 41, 59, ${alpha})`; // Cool dark background for no contact
+
+                            // Color scale driven by contact density & average exit speed
+                            if (hits > 0) {
+                                if (avgEv >= 92 || intensity > 0.6) {
+                                    color = `rgba(239, 68, 68, ${alpha})`; // Hot Red
+                                } else if (avgEv >= 85 || intensity > 0.3) {
+                                    color = `rgba(245, 158, 11, ${alpha})`; // Amber/Yellow
+                                } else {
+                                    color = `rgba(59, 130, 246, ${alpha})`; // Blue
+                                }
+                            }
 
                             ctx.fillStyle = color;
                             ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
@@ -719,11 +730,11 @@
                             ctx.font = 'bold 11px sans-serif';
                             ctx.textAlign = 'center';
                             ctx.textBaseline = 'middle';
-                            const avgEv = count ? (gridEvs[r][c] / count).toFixed(1) : 0;
-                            ctx.fillText(`${count} p`, (x1 + x2) / 2, (y1 + y2) / 2 - 6);
+                            
+                            ctx.fillText(`${hits} hits`, (x1 + x2) / 2, (y1 + y2) / 2 - 6);
                             if (avgEv > 0) {
-                                ctx.fillStyle = '#f59e0b';
-                                ctx.fillText(`${avgEv} mph`, (x1 + x2) / 2, (y1 + y2) / 2 + 8);
+                                ctx.fillStyle = avgEv >= 90 ? '#f59e0b' : '#38bdf8';
+                                ctx.fillText(`${avgEv.toFixed(1)} mph`, (x1 + x2) / 2, (y1 + y2) / 2 + 8);
                             }
                         }
                     }
@@ -772,7 +783,8 @@
             if (strikeZoneChartInstance) strikeZoneChartInstance.destroy();
             const szCtx = document.getElementById('strikeZoneCanvas').getContext('2d');
 
-            const szPoints = (currentHeatmapView === 'heatmap') ? [] : filteredData.filter(r => r.px != null && r.pz != null).map(r => ({
+            // Strictly filter scatter points for HIT balls with recorded exit velocity
+            const szPoints = (currentHeatmapView === 'heatmap') ? [] : filteredData.filter(r => r.px != null && r.pz != null && r.ev != null && r.ev > 0).map(r => ({
                 x: r.px, y: r.pz, ev: r.ev, pitchType: r.t, pitcher: r.p, velo: r.v
             }));
 
@@ -782,7 +794,7 @@
                     datasets: [{
                         data: szPoints,
                         pointBackgroundColor: szPoints.map(d => d.ev >= 95 ? '#f59e0b' : (pitchColors[d.pitchType] || '#3b82f6')),
-                        pointRadius: szPoints.map(d => d.ev ? Math.max(3, Math.min(8, d.ev / 14)) : 3)
+                        pointRadius: szPoints.map(d => d.ev ? Math.max(3, Math.min(9, d.ev / 13)) : 3)
                     }]
                 },
                 plugins: [ strikeZoneGridPlugin ],
@@ -793,7 +805,7 @@
                         legend: { display: false },
                         tooltip: {
                             callbacks: {
-                                label: (ctx) => `${ctx.raw.pitcher} (${ctx.raw.pitchType}) - Pitch: ${ctx.raw.velo} mph | Exit Velo: ${ctx.raw.ev ? ctx.raw.ev + ' mph' : 'No Contact'}`
+                                label: (ctx) => `${ctx.raw.pitcher} (${ctx.raw.pitchType}) - Pitch: ${ctx.raw.velo} mph | Contact Exit Velo: ${ctx.raw.ev} mph`
                             }
                         }
                     },
@@ -839,4 +851,3 @@
     </script>
 </body>
 </html>
-```
